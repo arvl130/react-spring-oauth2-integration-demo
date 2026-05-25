@@ -1,0 +1,39 @@
+# Useful for debugging.
+#logging:
+#  level:
+#    org:
+#      springframework:
+#        security: TRACE
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: oauth2-gateway
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: your-client-id
+            client-secret: your-secret
+            authorization-grant-type: authorization_code
+            scope: openid
+        provider:
+          keycloak:
+            issuer-uri: path/to/issuer/uri
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: resource
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/**
+              filters:
+                # Removes /api at the beginning before passing the request.
+                - StripPrefix=1
+                # Exchanges the session for a token before passing the request.
+                - TokenRelay=

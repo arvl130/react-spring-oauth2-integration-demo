@@ -1,5 +1,7 @@
+import path from "path";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -16,12 +18,21 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_API_BASE_URL,
           secure: false,
         },
+        "/logout": {
+          target: env.VITE_API_BASE_URL,
+          secure: false,
+        },
         "/api": {
           target: env.VITE_API_BASE_URL,
           secure: false,
         },
       },
     },
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
   };
 });

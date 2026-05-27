@@ -25,7 +25,7 @@ public class SecurityConfig {
                 )
                 // Configure OAuth2 Login.
                 .oauth2Login(Customizer.withDefaults())
-                // Configure OIDC Logout via Back-channel Endpoint.
+                // Enable OIDC Logout via Back-channel Endpoint.
                 .oidcLogout((logout) -> logout
                         .backChannel(Customizer.withDefaults())
                 )

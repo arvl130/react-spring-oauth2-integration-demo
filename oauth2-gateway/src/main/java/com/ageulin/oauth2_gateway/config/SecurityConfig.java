@@ -29,7 +29,9 @@ public class SecurityConfig {
                 .oidcLogout((logout) -> logout
                         .backChannel(Customizer.withDefaults())
                 )
+                // Enable CSRF settings required for single page applications.
                 .csrf(CsrfConfigurer::spa)
+                // Perform OIDC RP-initiated Logout after Local Logout succeeds.
                 .logout((logout) -> logout
                         .logoutSuccessHandler(this.oidcLogoutSuccessHandler(clientRegistrationRepository))
                 )

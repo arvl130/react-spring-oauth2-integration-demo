@@ -57,9 +57,10 @@ public class SecurityConfig {
         // after the logout has been performed at the Provider
         oidcLogoutSuccessHandler.setPostLogoutRedirectUri("{baseUrl}");
         
-        // Instead of sending HTTP Status 202 Accepted, instead of a redirect.
+        // Send HTTP Status 202 Accepted instead of a redirect.
+        //
         // This allows our frontend to read the Location header and perform
-        // the redirect themselves.
+        // the redirect itself.
         var redirectStrategy = new DefaultRedirectStrategy();
         redirectStrategy.setStatusCode(HttpStatus.ACCEPTED);
         oidcLogoutSuccessHandler.setRedirectStrategy(redirectStrategy);

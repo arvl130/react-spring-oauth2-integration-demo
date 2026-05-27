@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.DefaultRedirectStrategy;
@@ -28,6 +29,7 @@ public class SecurityConfig {
                 .oidcLogout((logout) -> logout
                         .backChannel(Customizer.withDefaults())
                 )
+                .csrf(CsrfConfigurer::spa)
                 .logout((logout) -> logout
                         .logoutSuccessHandler(this.oidcLogoutSuccessHandler(clientRegistrationRepository))
                 )

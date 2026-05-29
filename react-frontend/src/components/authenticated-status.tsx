@@ -4,9 +4,13 @@ import { Button } from "./ui/button";
 import { LoaderCircle } from "lucide-react";
 
 function HasAuthenticatedStatus({
+  user,
   isRefreshPending,
   onRefresh,
 }: {
+  user: {
+    id: string;
+  };
   isRefreshPending: boolean;
   onRefresh: () => void;
 }) {
@@ -14,6 +18,9 @@ function HasAuthenticatedStatus({
   return (
     <div>
       <p className="mb-4">Congratulations! You are signed in.</p>
+      <p className="mb-4">
+        Your User ID is <code>{user.id}</code>
+      </p>
       <div className="space-x-4">
         <Button
           type="button"
@@ -66,6 +73,7 @@ export function AuthenticatedStatus() {
                 <HasUnauthenticatedStatus />
               ) : (
                 <HasAuthenticatedStatus
+                  user={data.data.data}
                   isRefreshPending={isPending}
                   onRefresh={refetch}
                 />

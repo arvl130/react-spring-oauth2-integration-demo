@@ -8,13 +8,26 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.*;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.savedrequest.RequestCache;
 
 @Configuration
 public class SecurityConfig {
+    @Bean
+    OAuth2AuthorizationRequestResolver authorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
+        return new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository);
+    }
+
+    @Bean
+    AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
+        return new HttpSessionOAuth2AuthorizationRequestRepository();
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            ClientRegistrationRepository clientRegistrationRepository) {
@@ -44,8 +57,39 @@ public class SecurityConfig {
                         .authenticationEntryPoint(
                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
                         )
+                )
+                // Spring Security throws a ClientAuthorizationException if the session is still valid,
+                // but our OAuth2 Client fails to authorize with the error code invalid_token or invalid_grant.
+                // The default behavior is to respond with an HTTP status Internal Server Error response when
+                // this exception is thrown.
+                //
+                // Instead, we will respond with an HTTP status Unauthorized response, because our frontend
+                // expects this response if our token has become invalid.
+                .addFilterBefore(
+                        new SendHttpUnauthorizedResponseIfTokenOrGrantIsInvalidFilter(),
+                        OAuth2AuthorizationRequestRedirectFilter.class
                 );
 
+        // Initialize the default request cache and make it available.
+        http.requestCache(configurer -> {
+            configurer.init(http);
+        });
+
+        RequestCache defaultRequestCache = http.getSharedObject(RequestCache.class);
+
+        // Spring Security throws a ClientAuthorizationRequiredException if the session is still valid,
+        // but there is no authorized OAuth2 Client available. The default behavior is to respond with
+        // an HTTP redirect response when this exception is thrown.
+        //
+        // Instead, we will respond with an HTTP status Unauthorized response, because our frontend
+        // expects this response if our token has been removed from the session.
+        var oauth2RequiredFilter = new SendHttpUnauthorizedResponseIfClientAuthenticationIsRequiredFilter(
+                this.authorizationRequestResolver(clientRegistrationRepository),
+                this.authorizationRequestRepository(),
+                defaultRequestCache
+        );
+
+        http.addFilterAfter(oauth2RequiredFilter, OAuth2AuthorizationRequestRedirectFilter.class);
         return http.build();
     }
 
